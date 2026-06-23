@@ -12,17 +12,14 @@ default_country <- "Slovenia"
 
 # https://ec.europa.eu/eurostat/databrowser/view/NRG_CB_PEM__custom_200961/default/table?lang=en
 raw_data <- read_csv(
-  "nrg_cb_pem_linear_2_0.csv.gz",
-  na = c("", ":"),
-  show_col_types = FALSE
+  "nrg_cb_pem_linear_2_0.csv.gz"
 )
 
 
 pem <- raw_data |>
   filter(
     unit == "GWH",
-    !is.na(OBS_VALUE),
-    nchar(geo) == 2
+    !is.na(OBS_VALUE)
   ) |>
   mutate(
     date = as.Date(paste0(TIME_PERIOD, "-01")),
@@ -44,19 +41,16 @@ total_source <- "Total"
 
 countries <- pem |>
   distinct(country) |>
-  arrange(country) |>
-  pull(country)
+  arrange(country)
 
 months <- pem |>
   distinct(month, date) |>
-  arrange(date) |>
-  pull(month)
+  arrange(date)
 
 sources <- pem |>
   filter(source != total_source) |>
   distinct(source) |>
-  arrange(source) |>
-  pull(source)
+  arrange(source)
 
 
 ui <- navbarPage(
@@ -64,16 +58,16 @@ ui <- navbarPage(
   
   header = tags$head(
     tags$style(HTML("
-    body {
-      color: #434348;
-    }
+    
+    body {color: #434348;}
 
     .navbar-default {
       background-color: #434348;
     }
 
     .navbar-default .navbar-brand,
-    .navbar-default .navbar-nav > li > a {
+    .navbar-default .navbar-nav > 
+    li > a {
       color: white;
     }
     
@@ -89,38 +83,36 @@ ui <- navbarPage(
     }
 
     .navbar-default .navbar-nav > .active > a,
-    .navbar-default .navbar-nav > .active > a:hover,
+    .navbar-default  .navbar-nav > .active > a:hover,
     .navbar-default .navbar-nav > .active > a:focus {
       background-color: #7CB5EC;
       color: #2C3E50;
     }
 
-    h1, h2, h3 {
-      color: #2C3E50;
-    }
+    h1, h2, h3 { color: #2C3E50;}
 
     .form-control:focus {
       border-color: #7CB5EC;
-      box-shadow: 0 0 4px #7CB5EC;
+      
+      box-shadow: 0 0  4px #7CB5EC;
     }
+    
   "))
   ),
   
   tabPanel(
     "Data",
-    br(),
     DTOutput("table")
   ),
   
   tabPanel(
     "Total generation",
-    br(),
     
     sidebarLayout(
       sidebarPanel(
         selectInput(
-          "total_country",
-          "Country",
+          inputId = "total_country",
+          label = "Country",
           choices = countries,
           selected = default_country
         )
@@ -134,13 +126,12 @@ ui <- navbarPage(
   
   tabPanel(
     "Generation by source",
-    br(),
-    
+
     sidebarLayout(
       sidebarPanel(
         selectInput(
-          "source_country",
-          "Country",
+          inputId = "source_country",
+          label = "Country",
           choices = countries,
           selected = default_country
         ),
@@ -162,8 +153,7 @@ ui <- navbarPage(
   
   tabPanel(
     "Europe map",
-    br(),
-    
+
     sidebarLayout(
       sidebarPanel(
         selectInput(
@@ -190,8 +180,7 @@ ui <- navbarPage(
   
   tabPanel(
     "Pie chart",
-    br(),
-    
+
     sidebarLayout(
       sidebarPanel(
         selectInput(
@@ -218,7 +207,6 @@ ui <- navbarPage(
 
 server <- function(input, output) {
   
-  # Data table
   output$table <- renderDT({
     
     table_data <- pem |>
@@ -247,8 +235,7 @@ server <- function(input, output) {
       arrange(date)
     
     hchart(
-      total_data,
-      "line",
+      total_data, "line",
       hcaes(x = date, y = gwh)
     ) |>
       hc_title(
@@ -267,9 +254,7 @@ server <- function(input, output) {
     
     selected_data <- pem |>
       filter(
-        country == input$source_country,
-        source %in% input$selected_sources
-      )
+        country == input$source_country, source %in% input$selected_sources)
     
 
     annual_data <- selected_data |>
@@ -277,8 +262,7 @@ server <- function(input, output) {
       summarise(
         gwh = sum(gwh),
         .groups = "drop"
-      ) |>
-      arrange(year)
+      ) |> arrange(year)
     
     hchart(
       annual_data,
@@ -291,7 +275,6 @@ server <- function(input, output) {
       hc_xAxis(
         type = "linear",
         tickInterval = 1,
-        allowDecimals = FALSE,
         title = list(text = "Year")
       ) |>
       hc_yAxis(
@@ -376,7 +359,7 @@ server <- function(input, output) {
         gwh > 0
       ) |>
       group_by(country) |>
-      summarise(
+      summarise( #unnecessary
         gwh = sum(gwh),
         .groups = "drop"
       ) |>
